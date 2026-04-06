@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (currentQuestionID == null || currentQuestionID.isEmpty()) {
                     Log.e("ERROR", "No question ID yet!");
-                    return; // Don't even try to send
+                    return;
                 }
 
                 // ADDED: question_id=currentQuestionID
@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(3000); // every 3 sec
+                    Thread.sleep(3000);
 
                     String newQuestionId = getQuestionFromServer();
 
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
             String questionId = reader.readLine();
             reader.close();
 
-            return questionId; // Returns the ID like "101"
+            return questionId;
 
         } catch (Exception e) {
             e.printStackTrace();
