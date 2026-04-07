@@ -70,25 +70,30 @@ public class LoginActivity extends AppCompatActivity {
         String typedPassword = etpassword.getText().toString();
 
         new Thread(() -> {
-            try {
-                String passwordFromDb = getPassword();
+            String result = getPassword(); // Now looks like "1,mypassword"
 
-                runOnUiThread(() -> {
-                    if (passwordFromDb != null && passwordFromDb.equals(typedPassword)) {
+            runOnUiThread(() -> {
+                if (result != null && result.contains(",")) {
+                    // Split the response
+                    String[] parts = result.split(",");
+                    int realUserId = Integer.parseInt(parts[0]);
+                    String passwordFromDb = parts[1];
+
+                    if (passwordFromDb.equals(typedPassword)) {
                         Intent intent = new Intent(LoginActivity.this, SessionActivity.class);
-                        intent.putExtra("USER_ID", etusername.getText().toString());
+
+                        // PASS THE INT, NOT THE USERNAME STRING
+                        intent.putExtra("USER_ID", realUserId);
+
                         startActivity(intent);
                         finish();
-                    } else if ("user_not_found".equals(passwordFromDb)) {
-                        etusername.setError("User does not exist");
                     } else {
                         etpassword.setError("Wrong password!");
                     }
-                });
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+                } else {
+                    etusername.setError("User not found or Error");
+                }
+            });
         }).start();
     }
 }

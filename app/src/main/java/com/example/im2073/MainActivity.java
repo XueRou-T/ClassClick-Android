@@ -1,24 +1,22 @@
 package com.example.im2073;
-
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
-import android.widget.EditText;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 public class MainActivity extends AppCompatActivity {
 
     Button btnA, btnB, btnC, btnD;
@@ -94,10 +92,10 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                // ADDED: question_id=currentQuestionID
                 String data = "choice=" + answer +
                         "&session=" + sessionId +
-                        "&question_id=" + currentQuestionID;
+                        "&question_id=" + currentQuestionID +
+                        "&user_id=" + userId;
 
                 OutputStream os = conn.getOutputStream();
                 os.write(data.getBytes("UTF-8"));
@@ -130,13 +128,26 @@ public class MainActivity extends AppCompatActivity {
     void startChecking() {
 
         new Thread(() -> {
-            while (true) {
+            boolean running = true;
+            while (running) {
                 try {
                     Thread.sleep(3000);
 
                     String newQuestionId = getQuestionFromServer();
 
-                    if (newQuestionId != null && !newQuestionId.equals(currentQuestionID)) {
+                    if (newQuestionId != null && newQuestionId.trim().equals("ended")) {
+                        // EXIT the loop and go back
+                        running = false;
+                        runOnUiThread(() -> {
+                            Toast.makeText(MainActivity.this, "Session Ended", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(MainActivity.this, SessionActivity.class);
+                            intent.putExtra("USER_ID", userId);
+                            startActivity(intent);
+                            finish(); // Close MainActivity
+                        });
+                    }
+
+                    else if (newQuestionId != null && !newQuestionId.equals(currentQuestionID)) {
 
                         currentQuestionID = newQuestionId;
 
