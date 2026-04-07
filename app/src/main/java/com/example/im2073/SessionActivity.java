@@ -1,6 +1,5 @@
 package com.example.im2073;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,76 +15,70 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class LoginActivity extends AppCompatActivity {
+public class SessionActivity extends AppCompatActivity {
 
-    public static String SESSION_COOKIE = null;
+    public static String currentSessionId = null;
+    int userId;
 
-    EditText etusername, etpassword;
-    Button btnSubmit;
-
-    String SERVLET_URL = "http://10.0.2.2:9999/clicker/loginstudent";
+    EditText etSessionId;
+    Button btnJoin;
+    String SERVLET_URL = "http://10.0.2.2:9999/clicker/getsession";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.login_main);
+        setContentView(R.layout.session_main);
+
+        userId = getIntent().getIntExtra("USER_ID", 0);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        etusername = findViewById(R.id.etusername);
-        etpassword = findViewById(R.id.etpassword);
+        etSessionId = findViewById(R.id.etSessionId);
+        btnJoin = findViewById(R.id.btnJoin);
 
-        btnSubmit = findViewById(R.id.btnSubmit);
-        btnSubmit.setOnClickListener(v -> checkPassword());
+        btnJoin.setOnClickListener(v -> checkSession());
     }
 
-    String getPassword() {
+    String getSession() {
         try {
-            // Get the username from the UI
-            String username = etusername.getText().toString();
-
-            // Append it as a query parameter
-            URL url = new URL(SERVLET_URL + "?username=" + username);
+            String sessionid = etSessionId.getText().toString();
+            URL url = new URL(SERVLET_URL + "?session_id=" + sessionid);
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String password = reader.readLine();
+            String output = reader.readLine();
             reader.close();
 
-            return password;
-
+            return output;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return "";
+        return "error";
     }
 
-    void checkPassword() {
-        String typedPassword = etpassword.getText().toString();
-
+    void checkSession() {
         new Thread(() -> {
             try {
-                String passwordFromDb = getPassword();
+                String outcome = getSession();
 
                 runOnUiThread(() -> {
-                    if (passwordFromDb != null && passwordFromDb.equals(typedPassword)) {
-                        Intent intent = new Intent(LoginActivity.this, SessionActivity.class);
-                        intent.putExtra("USER_ID", etusername.getText().toString());
+                    if (outcome != null && outcome.equals("active")) {
+                        currentSessionId = etSessionId.getText().toString();
+
+                        android.content.Intent intent = new android.content.Intent(SessionActivity.this, MainActivity.class);
+                        intent.putExtra("USER_ID", userId);
                         startActivity(intent);
-                        finish();
-                    } else if ("user_not_found".equals(passwordFromDb)) {
-                        etusername.setError("User does not exist");
                     } else {
-                        etpassword.setError("Wrong password!");
+                        etSessionId.setError("Invalid Session Code");
                     }
                 });
-
             } catch (Exception e) {
                 e.printStackTrace();
             }

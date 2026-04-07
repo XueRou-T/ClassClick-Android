@@ -26,12 +26,11 @@ public class MainActivity extends AppCompatActivity {
     boolean hasAnswered = false;
 
     String currentQuestionID = "";
+    int userId;
 
     String SERVLET_URL = "http://10.0.2.2:9999/clicker/select";
     String GET_URL = "http://10.0.2.2:9999/clicker/getquestion";
 
-
-    EditText etSessionId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-
+        userId = getIntent().getIntExtra("USER_ID", 0);
 
         btnA = findViewById(R.id.btnA);
         btnB = findViewById(R.id.btnB);
@@ -55,9 +54,6 @@ public class MainActivity extends AppCompatActivity {
         btnB.setOnClickListener(v -> handleClick(btnB, "B"));
         btnC.setOnClickListener(v -> handleClick(btnC, "C"));
         btnD.setOnClickListener(v -> handleClick(btnD, "D"));
-
-
-        etSessionId = findViewById(R.id.etSessionId);
 
         startChecking();
     }
@@ -91,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 conn.setDoOutput(true);
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-                String sessionId = etSessionId.getText().toString();
+                String sessionId = SessionActivity.currentSessionId;
 
                 if (currentQuestionID == null || currentQuestionID.isEmpty()) {
                     Log.e("ERROR", "No question ID yet!");
@@ -156,8 +152,8 @@ public class MainActivity extends AppCompatActivity {
 
     String getQuestionFromServer() {
         try {
-            // Get the session ID from the UI
-            String sessionId = etSessionId.getText().toString();
+            // Get the session ID from SessionActivity
+            String sessionId = SessionActivity.currentSessionId;
 
             // Append it as a query parameter
             URL url = new URL(GET_URL + "?session_id=" + sessionId);
